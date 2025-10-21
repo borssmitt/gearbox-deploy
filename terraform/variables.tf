@@ -11,5 +11,5 @@ variable "instance_type" {
 }
 
 variable "key_name" {
-  default = "vm_rada_keypair.pem"
+  default = "vm_rada_keypair"
 }

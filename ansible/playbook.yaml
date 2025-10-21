@@ -1,32 +1,67 @@
 ---
-
 - hosts: web
   become: yes
+
   tasks:
-    - name: Updating
-      apt: 
+    - name: update_system
+      apt:
         update_cache: yes
         upgrade: yes
 
-    - name: Requirements installing
+    - name: requirements
       apt:
         name:
-          python3-pip
-          python3-venv
-          git
-          nginx
+          - python3-pip
+          - python3-venv
+          - git
+          - nginx
         state: present
 
-    - name: Gearbox_cloning
+    - name: django cloning
       git:
         repo: "https://github.com/borssmit/gearbox.git"
         dest: /home/ubuntu/gearbox
         version: main
 
-    - name: Python's_reqirements_installation
-      command: pip install -r /home/ubuntu/gearbox/requirements.txt chdir= /home/ubuntu/gearbox
-
-    - name: Django_running
-      command: nohup pytho3 manage.py runserver 0.0.0.0:8000 &
+    - name: Python req
+      command: pip install -r requirements.txt
       args:
         chdir: /home/ubuntu/gearbox
+
+    - name: run django
+      command: nohup python3 manage.py runserver 0.0.0.0:8000 &
+      args:
+        chdir: /home/ubuntu/gearbox
+
+    - name: settings Nginx as reverse proxy
+      copy:
+        dest: /etc/nginx/sites-available/django.conf
+        content: |
+          server {
+              listen 80;
+              server_name _;
+
+              location / {
+                  proxy_pass http://127.0.0.1:8000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              }
+          }
+
+    - name: activ Nginx
+      file:
+        src: /etc/nginx/sites-available/django.conf
+        dest: /etc/nginx/sites-enabled/django.conf
+        state: link
+        force: yes
+
+    - name: del def Nginx
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: rerun Nginx
+      service:
+        name: nginx
+        state: restarted

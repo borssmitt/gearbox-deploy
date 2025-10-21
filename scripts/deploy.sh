@@ -2,7 +2,7 @@
 
 set -e
 echo "====== Infra Terraform====="
-cd ../terraform
+cd ./terraform
 terraform init
 terraform apply -auto-approve
 
