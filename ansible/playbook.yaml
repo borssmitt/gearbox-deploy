@@ -23,15 +23,28 @@
         dest: /home/ubuntu/gearbox
         version: main
 
-    - name: Python req
-      command: pip install -r requirements.txt
+    - name: Create venv
+      command: python3 -m venv venv
+      args:
+        chdir: /home/ubuntu/gearbox  
+
+    - name: Install requirements inside venv
+      command: ./venv/bin/pip install -r requirements.txt
       args:
         chdir: /home/ubuntu/gearbox
 
-    - name: run django
-      command: nohup python3 manage.py runserver 0.0.0.0:8000 &
+
+    # - name: Python req
+    #   command: pip install -r requirements.txt
+    #   args:
+    #     chdir: /home/ubuntu/gearbox
+
+    - name: run django inside venv
+      shell: |
+        nohup ./venv/bin/python manage.py runserver 0.0.0.0:8000 > django.log 2>&1 &
       args:
         chdir: /home/ubuntu/gearbox
+
 
     - name: settings Nginx as reverse proxy
       copy:
